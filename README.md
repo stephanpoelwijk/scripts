@@ -8,3 +8,4 @@ Bunch of scripts - some are useful, some are throwaway
 - `new-storage-queues.ps1`: Create one or more queues in an Azure Storage account (defaults to local emulator)
 - `new-storage-tables.ps1`: Create one or more tables in an Azure Storage account (defaults to local emulator)
 - `run-localazurite.ps1`: Starts a local Azurite container with a host volume mounted for the emulator's storage.
+- `rewrite-json.ps1`: Rewrites a .json file effectively formatting it nicely

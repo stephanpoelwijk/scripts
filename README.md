@@ -21,3 +21,5 @@ Best to make a backup of the files before running the scripts. A full backup of 
   Chop off the word 'Resource' from the filename:
 
   `bulk-rename.ps1 C:\Folder\With\The\Files '(.*)Resource.cs' '#1.cs'`
+
+- `Move-UnderscoreToPath.ps1`: Move files with underscores in the name to a subfolder

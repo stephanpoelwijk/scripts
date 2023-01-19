@@ -20,7 +20,6 @@ foreach ($file in $files) {
             New-Item -Path $targetFolder -ItemType Directory
         }
     
-    
         Move-Item -Path $file.FullName -Destination $targetFileName
     }
 }

@@ -7,8 +7,8 @@ Bunch of scripts - some are useful, some are throwaway, none of them can be trus
 - `new-storage-containers.ps1`: Create one or more containers in an Azure Storage account (defaults to local emulator)
 - `new-storage-queues.ps1`: Create one or more queues in an Azure Storage account (defaults to local emulator)
 - `new-storage-tables.ps1`: Create one or more tables in an Azure Storage account (defaults to local emulator)
-- `run-localazurite.ps1`: Starts a local Azurite container with a host volume mounted for the emulator's storage.
-- `run-localsqlserver.ps1`: Starts a local SQL Server container with a valid SA password. Probably needless to say, but **don't use this in production** (either the script or the password).
+- `run-azurite.ps1`: Starts a local Azurite container with a host volume mounted for the emulator's storage.
+- `run-sqlserver.ps1`: Starts a local SQL Server container with a valid SA password. Probably needless to say, but **don't use this in production** (either the script or the password).
 - `rewrite-json.ps1`: Rewrites a .json file effectively formatting it nicely
 
 ### Risky Scripts

@@ -6,7 +6,6 @@ param (
     [switch] $force = $False
 )
 
-
 $files = Get-ChildItem -Path $folder
 
 foreach ($file in $files) {

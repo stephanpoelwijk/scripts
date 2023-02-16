@@ -6,7 +6,6 @@ param (
     [Parameter()] [switch] $force = $False
 )
 
-
 $buildPropsFileName = "$($path)/Directory.build.props"
 $projectFileItems = Get-ChildItem -Path "$($path)" -Recurse -Filter "*.csproj"
 

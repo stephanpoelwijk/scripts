@@ -10,6 +10,7 @@ Bunch of scripts - some are useful, some are throwaway, none of them can be trus
 - `run-azurite.ps1`: Starts a local Azurite container with a host volume mounted for the emulator's storage.
 - `run-sqlserver.ps1`: Starts a local SQL Server container with a valid SA password. Probably needless to say, but **don't use this in production** (either the script or the password).
 - `rewrite-json.ps1`: Rewrites a .json file effectively formatting it nicely
+- `presto-solutiono.ps1`: Create a .NET solution with unit/integration test projects and hook up all the stuff
 
 ### Risky Scripts
 

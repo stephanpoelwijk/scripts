@@ -55,4 +55,7 @@ if ($generateIntegrationTestProject) {
     dotnet add "$($integrationTestProjectFolder)/$($integrationTestProjectName).csproj" reference "$($srcProjectFolder)/$($projectName).csproj"
 }
 
+# Misc stuff
+dotnet new gitignore
+
 "Done"

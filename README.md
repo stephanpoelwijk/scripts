@@ -25,3 +25,4 @@ Best to make a backup of the files before running the scripts. A full backup of 
   `bulk-rename.ps1 C:\Folder\With\The\Files '(.*)Resource.cs' '#1.cs'`
 
 - `Move-UnderscoreToPath.ps1`: Move files with underscores in the name to a subfolder
+- `create-buildprops`: Creates a Directory.build.props file at the specified path and removed all the information from the .csproj files. Mildly dangerous, because it also rewrites all the .csproj files it can find.

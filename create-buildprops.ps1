@@ -2,7 +2,8 @@ param (
     [Parameter(Mandatory = $True)] [string] $path,
     [Parameter()] [string] $targetFramework = "NET7.0",
     [Parameter()] [string] $implicitUsings = "enable",
-    [Parameter()] [string] $nullable = "enable"
+    [Parameter()] [string] $nullable = "enable",
+    [Parameter()] [switch] $force = $False
 )
 
 
@@ -41,9 +42,10 @@ foreach ($projectFile in $projectFileItems) {
     removeNode $projectXml "//ImplicitUsings"
     removeNode $projectXml "//Nullable"
 
-    $projectXml.save($projectFile.FullName)
+    if ($force) {
+        $projectXml.save($projectFile.FullName)
+    }
 }
-
 
 # Unfortunately, `$someObject |  ConvertTo-Xml` does not do what I want :)
 $buildProps = @"
@@ -56,6 +58,11 @@ $buildProps = @"
 </Project>
 "@
 
-Set-Content -Path "$($buildPropsFileName)" -Value "$($buildProps)"
-
-"Wrote $($buildPropsFileName)"
+if ($force) {
+    Set-Content -Path "$($buildPropsFileName)" -Value "$($buildProps)"
+    "Wrote $($buildPropsFileName)"
+}
+else {
+    "Going to write the following content to $($buildPropsFileName):"
+    $buildProps
+}

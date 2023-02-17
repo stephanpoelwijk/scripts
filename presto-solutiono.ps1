@@ -18,7 +18,14 @@ $testsFolder = "./tests"
 $unitTestProjectFolder = "$($testsFolder)/$($unitTestProjectName)"
 $integrationTestProjectFolder = "$($testsFolder)/$($integrationTestProjectName)"
 
-$generateIntegrationTestProject = $templateName -eq "webapi"
+$generateWebApi = $templateName -eq "webapi"
+$additionalGenerationParameters = ""
+$generateIntegrationTestProject = $False;
+
+if ($generateWebApi) {
+    $additionalGenerationParameters += "--use-minimal-apis"
+    $generateIntegrationTestProject = $True
+}
 
 "Creating solution $($name)"
 
@@ -27,7 +34,7 @@ New-Item -ItemType Directory -Path "$($testsFolder)"
 
 # Set up the structure
 dotnet new sln -n "$($solutionName)"
-dotnet new $($templateName) -n "$($projectName)" -o "$($srcProjectFolder)"
+dotnet new $($templateName) -n "$($projectName)" -o "$($srcProjectFolder)" $additionalGenerationParameters
 dotnet new xunit -n "$($unitTestProjectName)" -o "$($unitTestProjectFolder)"
 if ($generateIntegrationTestProject) {
     dotnet new xunit -n "$($integrationTestProjectName)" -o "$($integrationTestProjectFolder)"

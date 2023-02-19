@@ -47,12 +47,13 @@ if ($generateIntegrationTestProject) {
     dotnet sln "$($solutionFileName)" add "$($integrationTestProjectFolder)"
 }
 
-
 # Add some package reference
 dotnet add "$($unitTestProjectFolder)/$($unitTestProjectName).csproj" package FluentAssertions
+dotnet add "$($unitTestProjectFolder)/$($unitTestProjectName).csproj" package Moq
 
 if ($generateIntegrationTestProject) {
     dotnet add "$($integrationTestProjectFolder)/$($integrationTestProjectName).csproj" package FluentAssertions 
+    dotnet add "$($integrationTestProjectFolder)/$($integrationTestProjectName).csproj" package Moq 
 }
 
 # Hook up the project references

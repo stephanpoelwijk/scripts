@@ -27,3 +27,8 @@ Best to make a backup of the files before running the scripts. A full backup of 
 - `Move-UnderscoreToPath.ps1`: Move files with underscores in the name to a subfolder
 - `create-buildprops.ps1`: Creates a Directory.build.props file at the specified path and removed all the information from the .csproj files. Mildly dangerous, because it also rewrites all the .csproj files it can find.
 - `reinstall-packages.ps1`: Reinstall existing packages for all projects in a folder. Typically this updates the used packages to the latest version.
+
+### Az CLI
+Scripts that use the [Az CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and require an `az login` before anything:
+
+- `gimme-webapp-settings`: List Azure webapp configuration values and convert the bunch into an appsettings.development.json format

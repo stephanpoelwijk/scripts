@@ -1,6 +1,6 @@
 param (
     [Parameter(Mandatory = $True)] [string] $path,
-    [Parameter()] [string] $targetFramework = "NET7.0",
+    [Parameter()] [string] $targetFramework = "net8.0",
     [Parameter()] [string] $implicitUsings = "enable",
     [Parameter()] [string] $nullable = "enable",
     [Parameter()] [switch] $force = $False

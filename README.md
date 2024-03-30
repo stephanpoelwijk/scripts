@@ -37,3 +37,4 @@ Scripts that use the [Az CLI](https://learn.microsoft.com/en-us/cli/azure/instal
 Scripts (or rather, some vague ideas) that need some tweaking and a lot of testing, but are now still a bit useless:
 
 - `azdevops-yamlify`: Create an Azure Devops .yml wrapper so it can be included in a pipeline.
+- `azdeploy-stuff`: Deploy Bicep resources & webapp

@@ -1,6 +1,6 @@
 param (
     [Parameter(Mandatory = $True)] [string] $appName,
-    [Parameter()] [string] $softwareZipFileName,
+    [Parameter()] [string] $softwareZipFileName = '',
     [Parameter()] [string] $bicepDeploymentFileName = '',
     [Parameter()] [string] $bicepDeploymentParameterFileName = '',
     [Parameter()] [string] $location = 'westeurope',
@@ -110,12 +110,12 @@ else {
 }
 
 # Software deployment
-if ($zipFileName -ne '') {
+if ($softwareZipFileName -ne '') {
     Write-Host "Deploying web application $($appName) to $($resourceGroupName)"
     az webapp deploy `
         --resource-group $($resourceGroupName) `
         --name $($appName) `
-        --src-path $($zipFileName)
+        --src-path $($softwareZipFileName)
 }
 else {
     Write-Host "Skipping software deployment"

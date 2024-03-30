@@ -32,3 +32,8 @@ Best to make a backup of the files before running the scripts. A full backup of 
 Scripts that use the [Az CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and require an `az login` before anything:
 
 - `gimme-webapp-settings`: List Azure webapp configuration values and convert the bunch into an appsettings.development.json format
+
+### Scratch pad
+Scripts (or rather, some vague ideas) that need some tweaking and a lot of testing, but are now still a bit useless:
+
+- `azdevops-yamlify`: Create an Azure Devops .yml wrapper so it can be included in a pipeline.

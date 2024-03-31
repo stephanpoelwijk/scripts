@@ -30,21 +30,15 @@ Write-Host "Azure subscription $($currentSubscription.name) / Tenant $($currentS
 # Set common variables
 $environment = 'dev'
 $appName = $appName.ToLower()
-$fullAppName = "app-$($environment)-$($appName)"
 $deploymentGroupName = "dplres-$($environment)-$($appName)"
 $resourceGroupName = "rg-$($environment)-$($appName)"
 $tempBicepDeploymentParameterFileName = [System.IO.Path]::GetTempFileName();
 
 # Resource names
 $resourceParameters = [ordered]@{
-    tenantId           = $currentSubscription.tenantId;
-    subscriptionName   = $currentSubscription.name
-    appName            = $appName;
-    fullAppName        = $fullAppName;
-    resourceGroupName  = $resourceGroupName;
-    storageAccountName = "str$($environment)$($appName)";
-    appInsightsName    = "ai-$($environment)-$($appName)";
-    location           = $location;
+    tenantId = $currentSubscription.tenantId;
+    appName  = $appName;
+    location = $location;
 }
 
 if ($bicepDeploymentParameterFileName -ne '') { 

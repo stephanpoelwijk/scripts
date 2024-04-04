@@ -10,7 +10,8 @@ param (
 # Make a'sure that we're in Azure
 $azCommandOutput = (az ad signed-in-user show 2>&1) | Out-String
 if ($azCommandOutput.contains('Interactive authentication is needed')) {
-    Write-Host "Not logged into Azure"
+    Write-Host "Not logged into Azure - Quitting"
+    return
 }
 else {
     Write-Host "Logged into Azure"
@@ -108,8 +109,11 @@ if ($softwareZipFileName -ne '') {
     Write-Host "Deploying web application $($appName) to $($resourceGroupName)"
     az webapp deploy `
         --resource-group $($resourceGroupName) `
-        --name $($appName) `
-        --src-path $($softwareZipFileName)
+        --name "webapp-$($environment)-$($appName)" `
+        --src-path $($softwareZipFileName) `
+        --clean `
+        --type zip
+    # --target-path "/home/site/wwwroot"
 }
 else {
     Write-Host "Skipping software deployment"

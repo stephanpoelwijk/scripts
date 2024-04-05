@@ -67,7 +67,6 @@ if ($rolesFileName -ne '') {
     #       AD group assignments do not disappear
 
     foreach ($appRole in $appRegistration.appRoles) {
-        $appRole.description
         $appRole.isEnabled = $False
         $rolesToDisable += $appRole
     }
@@ -81,6 +80,19 @@ if ($rolesFileName -ne '') {
         --id $appRegistration.id `
         --app-roles "`@$($rolesFileName)"
 }
+
+
+$enterpriseAppRegistrationOutput = (az ad sp show --id $($appRegistration.appId) 2>&1) | Out-String
+if ($enterpriseAppRegistrationOutput.contains('does not exist')) {
+    Write-Host "Creating app service principal"
+    az ad sp create --id $($appRegistration.appId)
+}
+
+$enterpriseAppRegistration = az ad sp show --id $($appRegistration.appId) | ConvertFrom-Json
+$servicePrincipalId = $enterpriseAppRegistration.id
+
+Write-Host "App registration $($appRegistration.appId) ServicePrincipalId: $($servicePrincipalId)"
+
 
 
 Write-Host "Done"

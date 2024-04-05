@@ -93,6 +93,28 @@ $servicePrincipalId = $enterpriseAppRegistration.id
 
 Write-Host "App registration $($appRegistration.appId) ServicePrincipalId: $($servicePrincipalId)"
 
+# Assign role to user in enterprise application
+# Loads of ids for the same object are floating around. The documentation is pretty clear what to pick up:
+#
+# https://learn.microsoft.com/en-us/graph/api/serviceprincipal-post-approleassignedto?view=graph-rest-1.0&tabs=http
+#
+# TODO: 
+# - Make this configurable
+# - Check if the assignment already exists
+# - Delete any unnecessary assignments
+$roleId = $appRegistration.appRoles[0].id
+$requestBody = @{
+    
+    "principalId" = "$($currentUser.id)"
+    "resourceId"  = "$($servicePrincipalId)"
+    "appRoleId"   = "$($roleId)"
+}
 
+$requestBody `
+| ConvertTo-Json -Compress -Depth 2 `
+| az rest --method POST `
+    --headers "Content-type=application/json" `
+    --uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($servicePrincipalId)/appRoleAssignedTo" `
+    --body "@-"
 
 Write-Host "Done"

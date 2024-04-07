@@ -75,46 +75,68 @@ function setCommonParameters {
 function updateRoles {
     param(
         [Parameter()] [object] $appRegistration,
-        [Parameter()] [array] $roles
+        [Parameter()] [array] $configuredRoles
     )
 
-    if ($roles.length -eq 0) {
+    if ($configuredRoles.length -eq 0) {
         return;
     }
 
     Write-Host "Updating roles"
-    $rolesToDisable = $()
-    $rolesToUpdate = $()
+    $roles = @()
     foreach ($appRole in $appRegistration.appRoles) {
-        $existingConfiguration = $roles | Where-Object { $_.value -eq $appRole.value } | Select-Object -First 1
+        $configuredRole = $configuredRoles | Where-Object { $_.value -eq $appRole.value } | Select-Object -First 1
 
         # Roles are always disabled (whether the role is updated or not). If the role is not disabled,
         # the error message "Permission (scope or role) cannot be deleted or updated unless disabled first."
         # will pop up.
         $appRole.isEnabled = $False
 
-        if ($Null -eq $existingConfiguration) {
-            Write-Host "Disabling $($appRole.displayName) ($($appRole.value))"
-            $rolesToDisable += $appRole
+        if ($Null -eq $configuredRole) {
+            Write-Host "Deleting $($appRole.displayName) ($($appRole.value))"
         }
         else {
             Write-Host "Updating $($appRole.displayName) ($($appRole.value))"
-            $rolesToUpdate += $appRole
+            $appRole.description = $configuredRole.description
+            $appRole.displayName = $configuredRole.displayName
+
+            $roles += $appRole
         }
     }
 
-    # Disable the roles
-    if (($rolesToDisable.length -gt 0) -or ($rolesToUpdate.length -gt 0)) {
-        Write-Host "Preparing app registration to disable $($rolesToDisable.length) and update $($rolesToUpdate.length) role(s)"
-        ConvertTo-Json $appRegistration.appRoles -Depth 2 -Compress | az ad app update `
-            --id $appRegistration.id `
-            --app-roles "@-"
-
-        Write-Host "Update role configuration with $($roles.length) role(s)"
-        az ad app update `
-            --id $appRegistration.id `
-            --app-roles "`@$($rolesFileName)"
+    foreach ($configuredRole in $configuredRoles) {
+        $existingRole = $appRegistration.appRoles | Where-Object { $_.value -eq $configuredRole.value } | Select-Object -First 1
+        if ($Null -eq $existingRole) {
+            Write-Host "Adding $($configuredRole.displayName) ($($configuredRole.value))"
+            $roleId = ([Guid]::NewGuid()).guid
+            $roles += @{
+                "id"                 = "$($roleId)"
+                "allowedMemberTypes" = @(
+                    "User"
+                )
+                "description"        = $configuredRole.description
+                "displayName"        = $configuredRole.displayName
+                "isEnabled"          = $True
+                "value"              = $configuredRole.value
+            }
+        }
     }
+
+    Write-Host "Disabling roles & updating app registration"
+    ConvertTo-Json $appRegistration.appRoles -Depth 2 -Compress | az ad app update `
+        --id $appRegistration.id `
+        --app-roles "@-"
+
+    Write-Host "Enabling roles & updating app registration"
+    foreach ($role in $roles) {
+        $role.isEnabled = $True
+    }
+
+    Write-Host "Saving roles"
+    ConvertTo-Json $roles -Depth 2 -Compress
+    ConvertTo-Json $roles -Depth 2 -Compress | az ad app update `
+        --id $appRegistration.id `
+        --app-roles "@-"
 }
 
 function main() {
@@ -124,7 +146,7 @@ function main() {
     if ($rolesFileName -ne '') {
         $roles = [array] (Get-Content -Path $rolesFileName | ConvertFrom-Json -Depth 3)
 
-        updateRoles -appRegistration $appRegistration -roles $roles
+        updateRoles -appRegistration $appRegistration -configuredRoles $roles
     }
 }
 main

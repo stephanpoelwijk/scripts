@@ -1,8 +1,13 @@
 param (
     [Parameter(Mandatory = $True)] [string] $appName,
     [Parameter()] [switch] $makeMeOwner = $False,
-    [Parameter()] [string] $rolesFileName
+    [Parameter()] [string] $rolesFileName,
+    [Parameter()] [string] $roleAssignmentsFileName
 )
+
+# Loads of ids for the same object are floating around in here. The documentation is pretty clear what to pick up:
+#
+# https://learn.microsoft.com/en-us/graph/api/serviceprincipal-post-approleassignedto?view=graph-rest-1.0&tabs=http
 
 # Make a'sure that we're in Azure
 $azCommandOutput = (az ad signed-in-user show 2>&1) | Out-String
@@ -26,6 +31,11 @@ $fullAppName = "$($environment)-$($appName)"
 if ($rolesFileName -ne '' -and (!(Test-Path -Path $rolesFileName))) {
     Write-Host "Could not find roles file $($rolesFileName)"
     return
+}
+
+if ($roleAssignmentsFileName -ne '' -and (!(Test-Path -Path $roleAssignmentsFileName))) {
+    Write-Host "Could not find role assignments file $($roleAssignmentsFileName)"
+    return;
 }
 
 # Off we go
@@ -138,6 +148,139 @@ function updateRoles {
         --app-roles "@-"
 }
 
+function ensureServicePrincipalExists() {
+    param(
+        [Parameter()] [object] $appRegistration
+    )
+
+    $enterpriseAppRegistrationOutput = (az ad sp show --id $($appRegistration.appId) 2>&1) | Out-String
+    if ($enterpriseAppRegistrationOutput.contains('does not exist')) {
+        Write-Host "Creating app service principal"
+        az ad sp create --id $($appRegistration.appId) 2>&1 | Out-Null
+    }
+}
+
+function assignRole() {
+    param(
+        [Parameter()] [string] $principalId,
+        [Parameter()] [string] $resourceId,
+        [Parameter()] [string] $roleId
+    )
+
+    $requestBody = @{
+    
+        "principalId" = $principalId
+        "resourceId"  = $resourceId
+        "appRoleId"   = $roleId
+    }
+    
+    Write-Host "Assigning role. PrincipalId $($requestBody.principalId) ResourceId $($resourceId) RoleId $($requestBody.appRoleId)"
+
+    $requestBody `
+    | ConvertTo-Json -Compress -Depth 2 `
+    | az rest --method POST `
+        --headers "Content-type=application/json" `
+        --uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($servicePrincipalId)/appRoleAssignedTo" `
+        --body "@-" 2>&1
+
+}
+
+function removeRoleAssignment() {
+    param(
+        [Parameter()] [string] $assignmentId,
+        [Parameter()] [string] $principalId,
+        [Parameter()] [string] $resourceId,
+        [Parameter()] [string] $roleId
+    )
+
+    Write-Host "Removing role. PrincipalId $($principalId) ResourceId $($resourceId) RoleId $($roleId) AssignmentId $($assignmentId)"
+
+    az rest --method DELETE `
+        --headers "Content-type=application/json" `
+        --uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($servicePrincipalId)/appRoleAssignedTo/$($assignmentId)"
+}
+
+function updateRoleAssignments() {
+    param(
+        [Parameter()] [object] $appRegistration,
+        [Parameter()] [array] $configuredRoleAssignments
+    )
+
+    $enterpriseAppRegistration = az ad sp show --id $($appRegistration.appId) | ConvertFrom-Json
+    $servicePrincipalId = $enterpriseAppRegistration.id
+
+    Write-Host "App Registration: $($appRegistration.displayName) ClientId: $($appRegistration.appId) ServicePrincipalId: $($servicePrincipalId)"
+
+    $roleAssignments = @()
+
+    foreach ($roleAssignment in $configuredRoleAssignments) {
+        $role = $enterpriseAppRegistration.appRoles | Where-Object { $_.value -eq $roleAssignment.roleName } | Select-Object -First 1
+        if ($null -eq $role) {
+            Write-Host "Could not find role $($roleAssignment.roleName)"
+            continue
+        }
+
+        foreach ($groupName in $roleAssignment.groups) {
+            $group = ([array] (az ad group list --filter "displayName eq '$($groupName)'" | ConvertFrom-Json -Depth 3)) | Select-Object -First 1
+            if ($Null -eq $group) {
+                Write-Host "Could not find group $($groupName)"
+                continue
+            }
+
+            Write-Host "Assigning group $($userName) to $($role.displayName)"
+
+            $roleAssignments += @{
+                "principalId" = $group.id
+                "resourceId"  = $servicePrincipalId
+                "appRoleId"   = $role.id
+            }
+        }
+
+        foreach ($userName in $roleAssignment.users) {
+            $user = ([array] (az ad user list --filter "userPrincipalName eq '$($userName)'" | ConvertFrom-Json -Depth 3)) | Select-Object -First 1
+            if ($Null -eq $user) {
+                Write-Host "Could not find user with userprincipal name $($userName)"
+                return
+            }
+
+            Write-Host "Assigning user $($userName) to $($role.displayName)"
+
+            $roleAssignments += @{
+                "principalId" = $user.id
+                "resourceId"  = $servicePrincipalId
+                "appRoleId"   = $role.id
+            }
+        }
+    }
+
+    $existingRoleAssignments = [array] (az rest --method GET `
+            --headers "Content-type=application/json" `
+            --uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($servicePrincipalId)/appRoleAssignedTo" `
+        | ConvertFrom-Json)
+
+    Write-Host "Deleting unnecessary role assignments (if any)"
+    foreach ($existingRoleAssignment in $existingRoleAssignments) {
+        $roleAssignment = $roleAssignments | Where-Object({ $_.principalId -eq $existingRoleAssignment.value.principalId -and $_.appRoleId -eq $existingRoleAssignment.value.appRoleId }) | Select-Object -First 1;
+        if ($Null -eq $roleAssignment -and $null -ne $existingRoleAssignment.value.principalId) {
+            removeRoleAssignment -assignmentId $existingRoleAssignment.value.id -principalId $existingRoleAssignment.value.principalId -resourceId $existingRoleAssignments.value.resourceId -roleId $existingRoleAssignments.value.appRoleId
+        }
+    }
+
+    if ($roleAssignments.length -gt 0) {
+
+        Write-Host "Creating role assignments"
+        foreach ($roleAssignment in $roleAssignments) {
+            $existingRoleAssignment = $existingRoleAssignments | Where-Object({ $_.value.principalId -eq $roleAssignment.principalId -and $_.value.appRoleId -eq $roleAssignment.appRoleId }) | Select-Object -First 1;
+            if ($Null -ne $existingRoleAssignment) {
+                Write-Host "Role assignment already exists for PrincipalId $($roleAssignment.principalId) and RoleId $($roleAssignment.appRoleId)"
+                continue
+            }
+
+            assignRole -principalId $roleAssignment.principalId -resourceId $roleAssignment.resourceId -roleId $roleAssignment.appRoleId
+        }
+    }
+}
+
 function main() {
     makeMeOwner -appRegistration $appRegistration -currentUser $currentUser -makeMeOwner $makeMeOwner
     setCommonParameters -appRegistration $appRegistration -appName $fullAppName
@@ -147,42 +290,16 @@ function main() {
 
         updateRoles -appRegistration $appRegistration -configuredRoles $roles
     }
+
+    if ($roleAssignmentsFileName -ne '') {
+        $roleAssignments = [array] (Get-Content -Path $roleAssignmentsFileName | ConvertFrom-Json -Depth 3)
+
+        ensureServicePrincipalExists -appRegistration $appRegistration
+
+        updateRoleAssignments -appRegistration $appRegistration -configuredRoleAssignments $roleAssignments
+    }
+
+    Write-Host "Done"
+
 }
 main
-
-# $enterpriseAppRegistrationOutput = (az ad sp show --id $($appRegistration.appId) 2>&1) | Out-String
-# if ($enterpriseAppRegistrationOutput.contains('does not exist')) {
-#     Write-Host "Creating app service principal"
-#     az ad sp create --id $($appRegistration.appId)
-# }
-
-# $enterpriseAppRegistration = az ad sp show --id $($appRegistration.appId) | ConvertFrom-Json
-# $servicePrincipalId = $enterpriseAppRegistration.id
-
-# Write-Host "App registration $($appRegistration.appId) ServicePrincipalId: $($servicePrincipalId)"
-
-# # Assign role to user in enterprise application
-# # Loads of ids for the same object are floating around. The documentation is pretty clear what to pick up:
-# #
-# # https://learn.microsoft.com/en-us/graph/api/serviceprincipal-post-approleassignedto?view=graph-rest-1.0&tabs=http
-# #
-# # TODO: 
-# # - Make this configurable
-# # - Check if the assignment already exists
-# # - Delete any unnecessary assignments
-# $roleId = $appRegistration.appRoles[0].id
-# $requestBody = @{
-    
-#     "principalId" = "$($currentUser.id)"
-#     "resourceId"  = "$($servicePrincipalId)"
-#     "appRoleId"   = "$($roleId)"
-# }
-
-# $requestBody `
-# | ConvertTo-Json -Compress -Depth 2 `
-# | az rest --method POST `
-#     --headers "Content-type=application/json" `
-#     --uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($servicePrincipalId)/appRoleAssignedTo" `
-#     --body "@-"
-
-Write-Host "Done"

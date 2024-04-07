@@ -133,7 +133,6 @@ function updateRoles {
     }
 
     Write-Host "Saving roles"
-    ConvertTo-Json $roles -Depth 2 -Compress
     ConvertTo-Json $roles -Depth 2 -Compress | az ad app update `
         --id $appRegistration.id `
         --app-roles "@-"
@@ -150,30 +149,6 @@ function main() {
     }
 }
 main
-
-
-# if ($rolesFileName -ne '') {
-
-#     $rolesToDisable = @()
-
-#     # TODO: Only disable the roles that are not in the roles file so that existing 
-#     #       AD group assignments do not disappear
-
-#     foreach ($appRole in $appRegistration.appRoles) {
-#         $appRole.isEnabled = $False
-#         $rolesToDisable += $appRole
-#     }
-
-#     ConvertTo-Json $rolesToDisable -Depth 2 -Compress | az ad app update `
-#         --id $appRegistration.id `
-#         --app-roles "@-"
-
-#     Write-Host "Update available roles"
-#     az ad app update `
-#         --id $appRegistration.id `
-#         --app-roles "`@$($rolesFileName)"
-# }
-
 
 # $enterpriseAppRegistrationOutput = (az ad sp show --id $($appRegistration.appId) 2>&1) | Out-String
 # if ($enterpriseAppRegistrationOutput.contains('does not exist')) {

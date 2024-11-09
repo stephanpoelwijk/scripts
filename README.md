@@ -7,7 +7,7 @@ Bunch of scripts - some are useful, some are throwaway, none of them can be trus
 - `new-storage-containers`: Create one or more containers in an Azure Storage account (defaults to local emulator)
 - `new-storage-queues`: Create one or more queues in an Azure Storage account (defaults to local emulator)
 - `new-storage-tables`: Create one or more tables in an Azure Storage account (defaults to local emulator)
-- `run-azuriteps1`: Starts a local Azurite container with a host volume mounted for the emulator's storage.
+- `run-azurite`: Starts a local Azurite container with a host volume mounted for the emulator's storage.
 - `run-sqlserver`: Starts a local SQL Server container with a valid SA password. Probably needless to say, but **don't use this in production** (either the script or the password).
 - `rewrite-json`: Rewrites a .json file effectively formatting it nicely
 - `presto-solutiono`: Create a .NET solution with unit/integration test projects and hook up all the stuff

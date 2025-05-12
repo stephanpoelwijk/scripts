@@ -21,6 +21,7 @@ trusted until proven otherwise.
     projects and hook up all the stuff
 -   `update-pat.sh`: Updates the github personal access token to the personal
     access token stored in `GITHUB_PAT`
+-   `generate-api.sh`: Generates a Typescript API file from an OpenApi spec
 
 ### Risky Scripts
 

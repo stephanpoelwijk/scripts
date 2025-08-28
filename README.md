@@ -16,6 +16,9 @@ trusted until proven otherwise.
 -   `run-sqlserver`: Starts a local SQL Server container with a valid SA
     password. Probably needless to say, but **don't use this in production**
     (either the script or the password).
+-   `run-postgres`: Starts a local PostgreSQL container with a password for the
+    `postgres` user. Probably needless to say, but **don't use this in
+    production** (either the script or the password).
 -   `rewrite-json`: Rewrites a .json file effectively formatting it nicely
 -   `presto-solutiono`: Create a .NET solution with unit/integration test
     projects and hook up all the stuff

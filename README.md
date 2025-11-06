@@ -26,6 +26,8 @@ trusted until proven otherwise.
   access token stored in `GITHUB_PAT`
 - `generate-api.sh`: Generates a Typescript API file from an OpenApi spec
 - `merge-repos.sh`: Merge two repositories into one while keeping history
+- `create-react-webapp.sh`: Create a React webapp with Tailwind and Shadcn. Uses
+  `jq`, `npm` and a bunch of packages to do the job.
 
 ### Risky Scripts
 

@@ -13,6 +13,7 @@ trusted until proven otherwise.
   (defaults to local emulator)
 - `run-azurite`: Starts a local Azurite container with a host volume mounted for
   the emulator's storage.
+- `run-mysql`: Starts a local mysql server container.
 - `run-sqlserver`: Starts a local SQL Server container with a valid SA password.
   Probably needless to say, but **don't use this in production** (either the
   script or the password).

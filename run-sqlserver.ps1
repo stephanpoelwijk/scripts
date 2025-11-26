@@ -1,7 +1,4 @@
 param (
-    [Parameter()]
-    [string] $localDataFolder = ".azurite",
-
     [Parameter(Mandatory = $False)]
     [switch] $pullImage = $False
 )
